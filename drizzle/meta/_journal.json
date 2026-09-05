@@ -1,0 +1,48 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1788363104588,
+      "tag": "0000_strong_rhino",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1788364455721,
+      "tag": "0001_strange_vance_astro",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1788379746210,
+      "tag": "0002_quiet_red_wolf",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1788382447363,
+      "tag": "0003_skinny_namora",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1788384153302,
+      "tag": "0004_magical_metal_master",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1788534701845,
+      "tag": "0005_striped_hydra",
+      "breakpoints": true
+    }
+  ]
+}
