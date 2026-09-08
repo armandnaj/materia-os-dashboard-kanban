@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowLeft, ImagePlus, Trash2, Upload } from "lucide-react";
+import { ArrowLeft, ImagePlus, Pencil, Save, Trash2, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 type Case = {
   id: number;
@@ -31,6 +33,9 @@ export function CaseDetailApp() {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [canEdit, setCanEdit] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [draft, setDraft] = useState<Case | null>(null);
 
   const load = useCallback(async () => {
     if (!Number.isInteger(id) || id < 1) return;
@@ -41,6 +46,7 @@ export function CaseDetailApp() {
       if (!caseResponse.ok) throw new Error(caseData.error || "Кейс не найден");
       if (!imagesResponse.ok) throw new Error(imagesData.error || "Не удалось загрузить изображения");
       setItem(caseData.case);
+      setDraft(caseData.case);
       setCanEdit(caseData.canEdit === true);
       setImages(imagesData.images);
       setActiveId((current) => current && imagesData.images.some((image: CaseImage) => image.id === current) ? current : imagesData.images[0]?.id ?? null);
@@ -84,26 +90,49 @@ export function CaseDetailApp() {
     } catch (err) { setError(err instanceof Error ? err.message : "Не удалось удалить изображение"); }
   };
 
+  const saveCase = async () => {
+    if (!canEdit || !draft?.title.trim()) return;
+    setSaving(true);
+    try {
+      const response = await fetch("/api/cases", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(draft),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Не удалось сохранить кейс");
+      setItem(draft);
+      setEditing(false);
+      setError("");
+    } catch (err) { setError(err instanceof Error ? err.message : "Не удалось сохранить кейс"); }
+    finally { setSaving(false); }
+  };
+
   if (loading) return <main className="project-page grid min-h-screen place-items-center"><div className="font-serif text-3xl">Открываю кейс…</div></main>;
   if (!item) return <main className="project-page grid min-h-screen place-items-center px-5 text-center"><div><div className="font-serif text-4xl">Кейс не найден</div><p className="mt-3">{error}</p><Link href="/cases" className="mt-6 inline-block border border-black px-4 py-3 font-bold uppercase">Вернуться к кейсам</Link></div></main>;
 
   const active = images.find((image) => image.id === activeId) ?? images[0];
-  const sections = [
-    ["01", "Гипотеза", item.hypothesis],
-    ["02", "Что сделали", item.action],
-    ["03", "Результат", item.result],
-    ["04", "Вывод", item.takeaway],
+  const sections: Array<[string, string, "hypothesis" | "action" | "result" | "takeaway"]> = [
+    ["01", "Гипотеза", "hypothesis"],
+    ["02", "Что сделали", "action"],
+    ["03", "Результат", "result"],
+    ["04", "Вывод", "takeaway"],
   ];
 
   return <main className="project-page min-h-screen">
     <header className="project-topbar">
       <Link href="/cases" className="flex items-center gap-2 font-bold uppercase tracking-[.08em]"><ArrowLeft className="size-4" />Все кейсы</Link>
-      <div className="project-mark"><strong>МИСТЕРИЯ</strong><span>CASES</span><em>AIAIAI lab</em></div>
+      <div className="project-topbar-right">
+        {canEdit && (editing ? <div className="project-edit-actions"><Button variant="outline" className="rounded-none border-black bg-transparent" onClick={() => { setDraft(item); setEditing(false); }}><X />Отмена</Button><Button className="rounded-none" disabled={saving} onClick={saveCase}><Save />{saving ? "Сохраняю…" : "Сохранить"}</Button></div> : <Button variant="outline" className="rounded-none border-black bg-transparent" onClick={() => { setDraft(item); setEditing(true); }}><Pencil />Редактировать</Button>)}
+        <div className="project-mark"><strong>МИСТЕРИЯ</strong><span>CASES</span><em>AIAIAI lab</em></div>
+      </div>
     </header>
     <article className="project-shell">
       <div className="project-intro">
-        <div className="flex flex-wrap items-center justify-center gap-2 text-xs font-bold uppercase tracking-[.12em]"><span>{item.category}</span><span>·</span><span>{item.period}</span><span className="case-stage case-stage--done">{item.stage}</span></div>
-        <h1>{item.title}</h1>
+        {editing && draft ? <>
+          <div className="project-edit-meta"><Input aria-label="Категория" value={draft.category} onChange={(event) => setDraft({ ...draft, category: event.target.value })} /><Input aria-label="Период" value={draft.period} onChange={(event) => setDraft({ ...draft, period: event.target.value })} /><Input aria-label="Этап" value={draft.stage} onChange={(event) => setDraft({ ...draft, stage: event.target.value })} /></div>
+          <Input className="project-edit-title" aria-label="Название кейса" value={draft.title} onChange={(event) => setDraft({ ...draft, title: event.target.value })} />
+        </> : <><div className="flex flex-wrap items-center justify-center gap-2 text-xs font-bold uppercase tracking-[.12em]"><span>{item.category}</span><span>·</span><span>{item.period}</span><span className="case-stage case-stage--done">{item.stage}</span></div><h1>{item.title}</h1></>}
       </div>
 
       {error && <div className="mx-auto mb-4 max-w-5xl border border-black bg-[#ffd9da] px-4 py-3 text-sm">{error}</div>}
@@ -116,7 +145,7 @@ export function CaseDetailApp() {
         </div>
       </section>
 
-      <section className="project-story">{sections.map(([number, title, copy]) => <div key={number} className="project-section"><div className="project-section-label"><span>{number}</span><h2>{title}</h2></div><p>{copy || "Пока не заполнено."}</p></div>)}</section>
+      <section className="project-story">{sections.map(([number, title, key]) => <div key={number} className="project-section"><div className="project-section-label"><span>{number}</span><h2>{title}</h2></div>{editing && draft ? <Textarea className="project-edit-textarea" value={draft[key]} maxLength={500} onChange={(event) => setDraft({ ...draft, [key]: event.target.value })} /> : <p>{item[key] || "Пока не заполнено."}</p>}</div>)}</section>
     </article>
   </main>;
 }
