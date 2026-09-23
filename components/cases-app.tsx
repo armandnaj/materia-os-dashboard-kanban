@@ -43,7 +43,7 @@ function BrandHeader({ onAdd, canEdit }: { onAdd: () => void; canEdit: boolean }
     <div className="flex flex-col gap-6 py-6 sm:flex-row sm:items-end sm:justify-between sm:py-8">
       <div className="brand-lockup"><div className="brand-word">МИСТЕРИЯ</div><div className="brand-os">CASES</div><div className="brand-lab">AIAIAI <span>lab</span></div></div>
       <div className="flex flex-wrap items-center gap-2">
-        <nav className="module-nav" aria-label="Разделы"><Link href="/">KANBAN</Link><Link href="/cases" className="is-active">CASES</Link></nav>
+        <nav className="module-nav" aria-label="Разделы"><Link href="/">KANBAN</Link><Link href="/cases" className="is-active">CASES</Link><Link href="/operations">OPERATIONS</Link></nav>
         {canEdit ? <Button className="h-11 rounded-none" onClick={onAdd}><Plus />Кейс</Button> : <a href="/signin-with-chatgpt?return_to=/cases" target="_top" className="view-mode-button">Просмотр · войти</a>}
       </div>
     </div>
